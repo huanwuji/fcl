@@ -1,7 +1,8 @@
 use pest::Parser;
+use pest_derive::*;
 
 #[derive(Parser)]
-#[grammar = "ident.pest"]
+#[grammar = "grammar.pest"]
 struct IdentParser;
 
 #[test]
@@ -24,4 +25,5 @@ fn main() {
             };
         }
     }
+//    assert_eq!(1, 3);
 }
