@@ -1,0 +1,9 @@
+[package]
+name = "rcl"
+version = "0.1.0"
+authors = ["戴奎 <hzdaikui@corp.netease.com>"]
+edition = "2018"
+
+[dependencies]
+nom = "^4.2.3"
+pest = "^2.1.1"
