@@ -7,3 +7,4 @@ pub mod parse;
 pub mod color;
 pub mod nom_test;
 pub mod pest_test;
+pub mod json;

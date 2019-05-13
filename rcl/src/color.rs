@@ -30,10 +30,9 @@ named!(hex_color<&str, Color>,
   )
 );
 
-fn main() {}
-
 #[test]
 fn parse_color() {
+    eprintln!("hex_color() = {:?}", hex_color("#2F14DF"));
     assert_eq!(hex_color("#2F14DF"), Ok(("", Color {
         red: 47,
         green: 20,
