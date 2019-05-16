@@ -1,6 +1,26 @@
-alpha = { 'a'..'z' | 'A'..'Z' }
-digit = { '0'..'9' }
+WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
 
-ident = { (alpha | digit)+ }
+boolean = { "true" | "false" }
+digits = @{ ("+" | "-")? ~ ("0" | ASCII_NONZERO_DIGIT ~ ASCII_DIGIT*) }
+long = { digits }
+float = @{ digits ~  "." ~ ASCII_DIGIT* }
+null = { "null" }
+char = {
+    !("\"" | "'" | "\\") ~ ANY
+    | "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")
+    | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
+}
+inner_chars = @{ char* }
+string = ${ ("\"" ~ PUSH(("\"")*) ~ inner_chars ~ "\"" ~ POP) | ("'" ~ PUSH(("'")*) ~ inner_chars ~ "'" ~ POP) }
 
-ident_list = _{ !digit ~ ident ~ (" " ~ ident)+ }
+value = _{ string | float | long | boolean | null }
+variable = @{ !value }
+func_name = @{ (!("(" | ")" | "." | ",") ~ ANY)+ }
+argument = { function | value | variable }
+arguments = _{ argument ~ ("," ~ argument)* }
+normal_func = { func_name ~ "(" ~ arguments? ~ ")" }
+currying_func = { func_name ~ ("(" ~ arguments? ~ ")"){2,} }
+flow_func = { (currying_func | normal_func) ~ ("." ~ (currying_func | normal_func))+ }
+function = { flow_func | currying_func | normal_func }
+func_separator = { ";" }
+functions = _{ SOI ~ (function ~ func_separator?)+ ~ EOI }

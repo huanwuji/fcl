@@ -3,8 +3,14 @@ name = "rcl"
 version = "0.1.0"
 authors = ["huanwuji"]
 edition = "2018"
+build = "build.rs"
 
 [dependencies]
 nom = "^5.0.0-beta1"
 pest = "^2.1.1"
 pest_derive = "^2.1.0"
+lalrpop-util = "0.17.0"
+regex = "0.2.0"
+
+[build-dependencies]
+lalrpop = "0.17.0"
