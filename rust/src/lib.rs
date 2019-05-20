@@ -1,6 +1,6 @@
 //extern crate pest;
-#[macro_use]
-extern crate nom;
+//#[macro_use]
+//extern crate nom;
 //extern crate pest_derive;
 
 pub mod ast;

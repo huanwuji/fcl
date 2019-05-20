@@ -10,6 +10,7 @@ pest = "^2.1.1"
 pest_derive = "^2.1.0"
 lalrpop-util = "0.17.0"
 regex = "0.2.0"
+string-interner="0.7.0"
 
 [build-dependencies]
 lalrpop = "0.17.0"
