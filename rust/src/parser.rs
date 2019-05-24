@@ -1,5 +1,5 @@
-use pest::{Parser, RuleType};
 use pest::iterators::{Pair, Pairs};
+use pest::Parser;
 use pest_derive::*;
 
 use crate::ast::{AnyVal, AstNode};
