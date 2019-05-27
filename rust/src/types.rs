@@ -1,17 +1,22 @@
 use std::any::Any;
 
-impl dyn Any {
-    pub fn downcast_ref_unchecked<T: Any>(&self) -> Option<&T> {
-        unsafe {
-            Some(&*(self as *const dyn Any as *const T))
-        }
+#[inline]
+pub fn cast<T: Any>(v: &dyn Any) -> &T {
+    unsafe {
+        &*(v as *const dyn Any as *const T)
     }
 }
 
-impl<T> From<T> for Any {
-    fn from(v: T) -> &Self {
-        v as &dyn Any
-    }
+#[inline]
+pub fn any<T>(v: &'static T) -> &'static dyn Any {
+    v as &dyn Any
+}
+
+#[test]
+fn any_type() {
+    let a = any(&32);
+    let b = cast::<i32>(a);
+    eprintln!("b = {:?}", b);
 }
 
 #[test]
@@ -37,6 +42,4 @@ fn any_test() {
         let b = &*(value as *const dyn Any as *const i32);
         eprintln!("b = {:?}", b);
     }
-
-//    match value.downcast_ref::<String>() {}
 }
