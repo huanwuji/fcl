@@ -1,82 +1,29 @@
-use std::any::{Any, TypeId};
+use std::any::Any;
 use std::intrinsics;
 use std::intrinsics::sub_with_overflow;
 
 use crate::ast::AstNode;
 use crate::types::*;
 
-#[derive(Debug, PartialEq, PartialOrd, Hash)]
-struct FuncDef<'a> {
-    name: &'a str,
-    a_types: &'a [&'a str],
-    r_type: &'a str,
+#[derive(Debug, PartialEq, Eq, Hash)]
+pub struct FuncDef<'a> {
+    pub name: &'a str,
+    pub a_types: &'a [&'a str],
+    pub r_type: &'a str,
 }
 
-#[macro_export]
-macro_rules! def {
-     ( $name:ident($($arg:ty),* ) -> $out:ty ) => {{
-          FuncDef{
-              name: stringify!($name),
-              a_types: &[$(stringify!($arg)),*],
-              r_type: stringify!($out)
-          }
-     }};
-}
+pub struct Context {}
 
-struct Context {}
-
-trait Func<'a, C, Out> {
-    fn eval(ctx: Context, nodes: Vec<AstNode>, curr: C) -> Out;
-    fn apply<T: Any>(ctx: Context, arguments: Vec<T>, curr: C) -> Out;
-}
-
-struct Add {}
-
-impl Add {
-    const f2: FuncDef<'static> = def!( add(i32, i32) -> i32 );
-    fn apply(&self, _func_def: FuncDef<'_>, args: &[&Any]) -> impl Any {
-        match _func_def {
-            f2 =>
-                match args {
-                    &[a, b] =>
-                        self.apply1(*cast::<i32>(a), *cast::<i32>(b)),
-                    _ => panic!("Not coverd")
-                },
-            _ => panic!("Not coverd")
-        }
+pub trait FuncA {
+    fn eval(ctx: Context, nodes: Vec<AstNode>, curr: Option<&Any>) -> Box<Any>;
+    fn apply(&self, _func_def: FuncDef<'_>, args: &[&Any]) -> Box<Any> {
+        self.apply1(_func_def, args, None)
     }
-
-    fn apply1(&self, v1: i32, v2: i32) -> i32 {
-        v1 + v2
-    }
-}
-
-#[test]
-fn fn_trait() {
-    let def: FuncDef = def!( add(i32, i32) -> i32 );
-    let _result = Add {}.apply(def, &[&2, &3]);
-//    println!("{}", stringify!(_result));
-    println!("{}", cast::<i32>(&_result));
-}
-
-#[test]
-fn type_test() {
-    let def_str = def!(haha(i32, i64) -> Vec);
-    println!("{:?}", def_str);
-}
-
-#[test]
-fn test_derive() {
-    let def1: FuncDef = def!(dd(i32, i64) -> haha);
-    let def2: FuncDef = def!(dd(i32, i64) -> haha);
-    eprintln!("{}", def1 == def2);
+    fn apply1(&self, _func_def: FuncDef<'_>, args: &[&Any], curr: Option<&Any>) -> Box<Any>;
 }
 
 #[test]
 fn type_id() {
-//    intrinsics
-
-//    intrinsics::
     unsafe {
         let type_id = intrinsics::type_id::<i32>();
         eprintln!("type_id = {:?}", type_id);

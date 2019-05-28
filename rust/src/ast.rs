@@ -1,3 +1,4 @@
+use crate::func::FuncDef;
 use crate::parser;
 
 #[derive(Debug)]
@@ -6,7 +7,6 @@ pub enum AnyVal<'a> {
     Bool(bool),
     Long(i64),
     Float(f64),
-    Null,
 }
 
 #[derive(Debug)]
@@ -19,14 +19,4 @@ pub enum AstNode<'a> {
     CurryingFunc { name: &'a str, args: Vec<Vec<AstNode<'a>>> },
     FuncEnd,
     Exprs(Vec<AstNode<'a>>),
-}
-
-pub fn parse(str: &str) -> AstNode {
-    parser::parse(str)
-}
-
-#[test]
-fn parse_test() {
-    let ast = parse("f1().f2(12,3)");
-    eprintln!("ast = {:?}", ast);
 }
