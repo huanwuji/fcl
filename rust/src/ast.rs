@@ -1,6 +1,3 @@
-use crate::func::FuncDef;
-use crate::parser;
-
 #[derive(Debug)]
 pub enum AnyVal<'a> {
     Str(&'a str),

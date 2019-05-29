@@ -1,9 +1,7 @@
 use std::any::Any;
 use std::intrinsics;
-use std::intrinsics::sub_with_overflow;
 
 use crate::ast::AstNode;
-use crate::types::*;
 
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub struct FuncDef<'a> {
