@@ -3,11 +3,11 @@ use crate::func::FuncDef;
 #[macro_export]
 macro_rules! def {
      ( $name:ident($($arg:ty),* ) -> $out:ty ) => {{
-          $crate::func::FuncDef{
-              name: stringify!($name),
-              a_types: &[$(stringify!($arg)),*],
-              r_type: stringify!($out)
-          }
+          $crate::func::FuncDef::new(
+              stringify!($name),
+              &[$(stringify!($arg)),*],
+              stringify!($out)
+          )
      }};
 }
 

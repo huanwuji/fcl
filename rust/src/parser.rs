@@ -2,15 +2,18 @@ use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use pest_derive::*;
 
-use crate::ast::{AnyVal, AstNode};
+use crate::ast::{AnyVal, AstNode, ValType};
+use crate::func::FuncDef;
+use crate::func::Funcs;
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"]
-pub struct FclParser { a: i32 }
+pub struct FclParser<'a> { funcs: Funcs<'a> }
 
 impl<'a, 'i: 'a> FclParser {
     pub fn ast(&self, str: &'a str) -> AstNode<'a> {
-        let pairs: Pairs<Rule> = FclParser::parse(Rule::functions, str).unwrap_or_else(|e| panic!("{}", e));
+        let pairs: Pairs<Rule> = FclParser::parse(Rule::functions, str)
+            .unwrap_or_else(|e| panic!("{}", e));
         self.build_functions(pairs)
     }
 
@@ -77,6 +80,12 @@ impl<'a, 'i: 'a> FclParser {
         args
     }
 
+    fn get_type(node: AstNode<'a>) -> &str {
+        match node {
+            AnyVal(val) => ValType::get_type(val)
+        }
+    }
+
     fn build_argument(&self, pair: Pair<'i, Rule>) -> AstNode<'a> {
         let arg_pair = pair.into_inner().next().unwrap();
         match arg_pair.as_rule() {
@@ -86,7 +95,7 @@ impl<'a, 'i: 'a> FclParser {
                 AstNode::Val(any_val)
             }
             Rule::variable => self.build_variable(arg_pair),
-            _ => AstNode::Empty
+            _ => panic!("UnMatched rule")
         }
     }
 
@@ -106,7 +115,7 @@ impl<'a, 'i: 'a> FclParser {
 }
 
 #[test]
-fn main() {
+fn parse_test() {
     let exprs = "f1(1,abc)(dd,11).dd().abc(1,2);";
 //    let exprs = "f1(1,2)(4,3,dd).ab().bd(cd(1,2));";
     let parser = FclParser { a: 32 };
