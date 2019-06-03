@@ -7,9 +7,9 @@ pub enum AnyVal<'a> {
     Str(&'a str),
 }
 
-pub struct ValType<'a> {}
+pub struct ValType {}
 
-impl<'a> ValType<'a> {
+impl<'a> ValType {
     const BOOL: &'a str = "bool";
     const LONG: &'a str = "long";
     const FLOAT: &'a str = "float";
@@ -17,7 +17,7 @@ impl<'a> ValType<'a> {
 
     pub fn get_type(val: &AnyVal<'a>) -> &'a str {
         match val {
-            Str(_) => ValType::STR,
+            AnyVal::Str(_) => ValType::STR,
             Bool => ValType::BOOL,
             Long => ValType::LONG,
             Float => ValType::FLOAT,
@@ -29,17 +29,17 @@ impl<'a> ValType<'a> {
 pub enum AstNode<'a> {
     Val(AnyVal<'a>),
     Var { name: &'a str },
-    Func { name: &'a str, args: Vec<AstNode<'a>>, func_def: FuncDef<'a> },
-    CurryingFunc { name: &'a str, args: Vec<Vec<AstNode<'a>>>, func_def: FuncDef<'a> },
-    FlowFunc { exprs: Vec<AstNode<'a>> },
-    Exprs(Vec<AstNode<'a>>),
+    Func { name: &'a str, args: &'a [AstNode<'a>], func_def: FuncDef<'a> },
+    CurryingFunc { name: &'a str, args: &'a [&'a [AstNode<'a>]], func_def: FuncDef<'a> },
+    FlowFunc { exprs: &'a [AstNode<'a>] },
+    Exprs(&'a [AstNode<'a>]),
     VOID,
     FuncEnd,
 }
 
 impl<'a> AstNode<'a> {
     const VAR: &'a str = "var";
-    fn get_type(&self) -> &'a str {
+    pub fn get_type(&self) -> &str {
         match self {
             AstNode::Val(val) => ValType::get_type(val),
             AstNode::Var { name } => AstNode::VAR,

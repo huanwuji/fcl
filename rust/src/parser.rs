@@ -2,7 +2,8 @@ use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use pest_derive::*;
 
-use crate::ast::{AnyVal, AstNode, ValType};
+use crate::ast::{AnyVal, AstNode};
+use crate::func::Args;
 use crate::func::FuncDef;
 use crate::func::Funcs;
 
@@ -31,7 +32,7 @@ impl<'a, 'i: 'a> FclParser {
                 _ => unreachable!()
             }
         }
-        AstNode::Exprs(exprs)
+        AstNode::Exprs(exprs.as_slice())
     }
 
     fn build_function(&self, pair: Pair<'i, Rule>) -> AstNode<'a> {
@@ -48,7 +49,7 @@ impl<'a, 'i: 'a> FclParser {
         for inner_pair in pair.into_inner() {
             functions.push(self.build_function(inner_pair))
         }
-        AstNode::FlowFunc { exprs: functions }
+        AstNode::FlowFunc { exprs: functions.as_slice() }
     }
 
     fn build_currying_func(&self, pair: Pair<'i, Rule>) -> AstNode<'a> {
@@ -61,7 +62,11 @@ impl<'a, 'i: 'a> FclParser {
                 _ => unreachable!()
             }
         }
-        AstNode::CurryingFunc { name: func_name.unwrap(), args: args_vec }
+        AstNode::CurryingFunc {
+            name: func_name.unwrap(),
+            args: args_vec.as_slice(),
+            func_def: self.func_def(func_name.unwrap(), args_vec.as_slice()),
+        }
     }
 
     fn build_normal_func(&self, pair: Pair<'i, Rule>) -> AstNode<'a> {
@@ -69,21 +74,27 @@ impl<'a, 'i: 'a> FclParser {
         let func_name = pairs.next().unwrap();
         let args_pair = pairs.next().unwrap();
         let arguments = self.build_arguments(args_pair);
-        AstNode::Func { name: func_name.as_str(), args: arguments }
+        AstNode::Func {
+            name: func_name.as_str(),
+            args: arguments,
+            func_def: self.func_def(func_name, &[arguments]),
+        }
     }
 
-    fn build_arguments(&self, pair: Pair<'i, Rule>) -> Vec<AstNode<'a>> {
+    fn build_arguments(&self, pair: Pair<'i, Rule>) -> &'a [AstNode<'a>] {
         let mut args = vec![];
         for arg_pair in pair.into_inner() {
             args.push(self.build_argument(arg_pair));
         }
-        args
+        args.as_slice()
     }
 
-    fn get_type(node: AstNode<'a>) -> &str {
-        match node {
-            AnyVal(val) => ValType::get_type(val)
-        }
+    fn func_def(&self, name: &'a str, args: &'a [&'a [AstNode<'a>]]) -> FuncDef {
+        let a_types = args.iter()
+            .map(|types| types.iter()
+                .map(|node| node.get_type())).collect();
+        let args = Args::new(a_types);
+        self.funcs.get_by_type(name, args);
     }
 
     fn build_argument(&self, pair: Pair<'i, Rule>) -> AstNode<'a> {
@@ -118,7 +129,7 @@ impl<'a, 'i: 'a> FclParser {
 fn parse_test() {
     let exprs = "f1(1,abc)(dd,11).dd().abc(1,2);";
 //    let exprs = "f1(1,2)(4,3,dd).ab().bd(cd(1,2));";
-    let parser = FclParser { a: 32 };
+    let parser = FclParser { funcs: Funcs::new() };
     let ast = parser.ast(exprs);
     eprintln!("ast = {:?}", ast);
 
