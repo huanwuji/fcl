@@ -1,32 +1,17 @@
-// Non-copyable types.
-struct Empty;
-struct Null;
-
-// A trait generic over `T`.
-trait DoubleDrop<T> {
-    // Define a method on the caller type which takes an
-    // additional single parameter `T` and does nothing with it.
-    fn double_drop(self, _: T);
-}
-
-// Implement `DoubleDrop<T>` for any generic parameter `T` and
-// caller `U`.
-impl<'a T> DoubleDrop<T> for T {
-    // This method takes ownership of both passed arguments,
-    // deallocating both.
-    fn double_drop(self, _: T) {
-        println!("haha");
-    }
-}
-
-fn main() {
-    let empty = Empty;
-    let null  = Null;
-
-    // Deallocate `empty` and `null`.
-    null.double_drop(null);
-
-    //empty;
-    //null;
-    // ^ TODO: Try uncommenting these lines.
-}
+//struct Haha<'a> {
+//    arr: &'a [i32]
+//}
+//
+//struct Gaga {}
+//
+//impl<'a> Gaga {
+//    fn re(&self) -> Haha<'a> {
+//        let vec = vec![1, 2, 3];
+//        Haha { arr: vec.as_slice() }
+//    }
+//}
+//
+//fn main() {
+//    let gaga = Gaga {};
+//    gaga.re();
+//}

@@ -1,5 +1,6 @@
 use crate::func::FuncDef;
 
+#[derive(Debug)]
 pub enum AnyVal<'a> {
     Bool(bool),
     Long(i64),
@@ -10,17 +11,17 @@ pub enum AnyVal<'a> {
 pub struct ValType {}
 
 impl<'a> ValType {
-    const BOOL: &'a str = "bool";
-    const LONG: &'a str = "long";
-    const FLOAT: &'a str = "float";
-    const STR: &'a str = "str";
+    const BOOL: &'static str = "bool";
+    const LONG: &'static str = "long";
+    const FLOAT: &'static str = "float";
+    const STR: &'static str = "str";
 
     pub fn get_type(val: &AnyVal<'a>) -> &'a str {
         match val {
             AnyVal::Str(_) => ValType::STR,
-            Bool => ValType::BOOL,
-            Long => ValType::LONG,
-            Float => ValType::FLOAT,
+            AnyVal::Bool(_) => ValType::BOOL,
+            AnyVal::Long(_) => ValType::LONG,
+            AnyVal::Float(_) => ValType::FLOAT,
         }
     }
 }
@@ -29,10 +30,10 @@ impl<'a> ValType {
 pub enum AstNode<'a> {
     Val(AnyVal<'a>),
     Var { name: &'a str },
-    Func { name: &'a str, args: &'a [AstNode<'a>], func_def: FuncDef<'a> },
-    CurryingFunc { name: &'a str, args: &'a [&'a [AstNode<'a>]], func_def: FuncDef<'a> },
-    FlowFunc { exprs: &'a [AstNode<'a>] },
-    Exprs(&'a [AstNode<'a>]),
+    Func { name: &'a str, args: Vec<AstNode<'a>>, func_def: &'a FuncDef<'a> },
+    CurryingFunc { name: &'a str, args: Vec<Vec<AstNode<'a>>>, func_def: &'a FuncDef<'a> },
+    FlowFunc { exprs: Vec<AstNode<'a>> },
+    Exprs(Vec<AstNode<'a>>),
     VOID,
     FuncEnd,
 }
@@ -42,9 +43,9 @@ impl<'a> AstNode<'a> {
     pub fn get_type(&self) -> &str {
         match self {
             AstNode::Val(val) => ValType::get_type(val),
-            AstNode::Var { name } => AstNode::VAR,
-            AstNode::Func { name, args, func_def } => func_def.r_type,
-            AstNode::CurryingFunc { name, args, func_def } => func_def.r_type,
+            AstNode::Var { .. } => AstNode::VAR,
+            AstNode::Func { func_def, .. } => func_def.r_type,
+            AstNode::CurryingFunc { func_def, .. } => func_def.r_type,
             AstNode::FlowFunc { exprs } => exprs.last().unwrap().get_type(),
             _ => panic!("Unsupport astNode type")
         }
