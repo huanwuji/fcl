@@ -1,13 +1,15 @@
 use std::any::Any;
+use std::rc::Rc;
 
 use crate::ast::AstNode;
 use crate::func::*;
+use crate::func_reg::{FuncManager, FuncReg};
 use crate::types::*;
 
 pub struct Add {}
 
 lazy_static! {
-    pub static ref ADD_LL: FuncDef<'static> = def!( add(i32, i32) -> i32 );
+    static ref ADD_LL: FuncDef<'static> = def!( add(i32, i32) -> i32 );
 }
 
 impl Add {
@@ -16,6 +18,12 @@ impl Add {
     }
     fn add(&self, v1: i32, v2: i32) -> i32 {
         v1 + v2
+    }
+}
+
+impl<'a> FuncReg<'a> for Add {
+    fn register(&self, manager: &'a mut FuncManager) {
+        manager.register(ADD_LL, &self);
     }
 }
 

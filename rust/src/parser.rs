@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use pest_derive::*;
@@ -9,9 +11,9 @@ use crate::func::Funcs;
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"]
-pub struct FclParser<'b> { funcs: Funcs<'b> }
+pub struct FclParser<'a> { funcs: Funcs<'a> }
 
-impl<'a, 'i: 'a, 'b: 'a> FclParser<'b> {
+impl<'a, 'i: 'a> FclParser<'a> {
     pub fn ast(&self, str: &'a str) -> AstNode<'a> {
         let pairs: Pairs<Rule> = FclParser::parse(Rule::functions, str)
             .unwrap_or_else(|e| panic!("{}", e));
@@ -35,7 +37,7 @@ impl<'a, 'i: 'a, 'b: 'a> FclParser<'b> {
         AstNode::Exprs(exprs)
     }
 
-    fn build_function(&self, pair: Pair<'i, Rule>) -> AstNode<'a> {
+    fn build_function(&'a self, pair: Pair<'i, Rule>) -> AstNode<'a> {
         match pair.as_rule() {
             Rule::flow_func => self.build_flow_func(pair),
             Rule::currying_func => self.build_currying_func(pair),
@@ -58,15 +60,15 @@ impl<'a, 'i: 'a, 'b: 'a> FclParser<'b> {
         let args_pair = pairs.next().unwrap();
         let arguments = self.build_arguments(args_pair);
         let argx = &vec![&arguments];
-        let func_def = self.func_def(func_name, argx).func_def;
+        let entity = self.func_def(func_name, argx);
         AstNode::Func {
             name: func_name,
             args: arguments,
-            func_def,
+            entity: entity,
         }
     }
 
-    fn build_currying_func(&self, pair: Pair<'i, Rule>) -> AstNode<'a> {
+    fn build_currying_func(&'a self, pair: Pair<'i, Rule>) -> AstNode<'a> {
         let mut func_name = None;
         let mut args_vec = vec![];
         for inner_pair in pair.into_inner() {
@@ -78,16 +80,16 @@ impl<'a, 'i: 'a, 'b: 'a> FclParser<'b> {
         }
         let argx = args_vec.iter()
             .map(|args| args).collect::<Vec<&Vec<AstNode<'a>>>>();
-        let func_def = self.func_def(func_name.unwrap(),
-                                     &argx).func_def;
+        let entity = self.func_def(func_name.unwrap(),
+                                   &argx);
         AstNode::CurryingFunc {
             name: func_name.unwrap(),
             args: args_vec,
-            func_def,
+            entity,
         }
     }
 
-    fn func_def(&self, name: &'a str, args: &'a Vec<&'a Vec<AstNode<'a>>>) -> &FuncEntity<'b> {
+    fn func_def(&self, name: &'a str, args: &'a Vec<&'a Vec<AstNode<'a>>>) -> &FuncEntity<'a> {
         let a_types = args.iter()
             .map(|types| types.iter()
                 .map(|node| node.get_type())

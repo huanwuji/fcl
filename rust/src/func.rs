@@ -3,6 +3,7 @@ use std::any::Any;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
+use std::rc::Rc;
 
 use crate::ast::AstNode;
 
@@ -89,9 +90,10 @@ pub struct Funcs<'a> {
     funcs: HashMap<u64, FuncEntity<'a>>
 }
 
+#[derive(Debug)]
 pub struct FuncEntity<'a> {
-    pub func_def: FuncDef<'a>,
-    pub func: Box<FuncA>,
+    pub func_def: &'a FuncDef<'a>,
+    pub func: &'a FuncA,
 }
 
 impl<'a> Funcs<'a> {
@@ -99,12 +101,15 @@ impl<'a> Funcs<'a> {
         Funcs { funcs: HashMap::new() }
     }
 
-    pub fn add<F: FuncA>(&mut self, func_def: FuncDef, func: F) {
-        let entity = FuncEntity { func_def, func: Box::new(func) };
+    pub fn add<F: FuncA>(&mut self, func_def: &'a FuncDef<'a>, func: &'a F) {
+        let entity = FuncEntity {
+            func_def: func_def,
+            func: func,
+        };
         self.funcs.insert(func_def.fid, entity);
     }
 
-    pub fn get_by_type<'c>(&self, name: &'c str, args: &'c Args<'c>) -> &FuncEntity<'a> {
+    pub fn get_by_type(&self, name: &'a str, args: &'a Args<'a>) -> &FuncEntity<'a> {
         let func_id = FuncDef::func_id(name, args);
         self.funcs.get(&func_id)
             .expect(format!("Not found func {}{:?}", name, args).as_str())
