@@ -1,6 +1,4 @@
-use std::rc::Rc;
-
-use crate::func::{FuncDef, FuncEntity};
+use crate::func::FuncDef;
 
 #[derive(Debug)]
 pub enum AnyVal<'a> {
@@ -32,8 +30,8 @@ impl<'a> ValType {
 pub enum AstNode<'a> {
     Val(AnyVal<'a>),
     Var { name: &'a str },
-    Func { name: &'a str, args: Vec<AstNode<'a>>, entity: &'a FuncEntity<'a> },
-    CurryingFunc { name: &'a str, args: Vec<Vec<AstNode<'a>>>, entity: &'a FuncEntity<'a> },
+    Func { name: &'a str, args: Vec<AstNode<'a>>, func_def: &'a FuncDef<'a> },
+    CurryingFunc { name: &'a str, args: Vec<Vec<AstNode<'a>>>, func_def: &'a FuncDef<'a> },
     FlowFunc { exprs: Vec<AstNode<'a>> },
     Exprs(Vec<AstNode<'a>>),
     VOID,
@@ -46,8 +44,8 @@ impl<'a> AstNode<'a> {
         match self {
             AstNode::Val(val) => ValType::get_type(val),
             AstNode::Var { .. } => AstNode::VAR,
-            AstNode::Func { entity, .. } => entity.func_def.r_type,
-            AstNode::CurryingFunc { entity, .. } => entity.func_def.r_type,
+            AstNode::Func { func_def, .. } => func_def.desc.r_type,
+            AstNode::CurryingFunc { func_def, .. } => func_def.desc.r_type,
             AstNode::FlowFunc { exprs } => exprs.last().unwrap().get_type(),
             _ => panic!("Unsupport astNode type")
         }

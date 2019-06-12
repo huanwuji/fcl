@@ -1,4 +1,4 @@
-use crate::func::FuncDef;
+use crate::func::FuncDesc;
 
 #[macro_export]
 macro_rules! def {
@@ -6,9 +6,9 @@ macro_rules! def {
         let a_types = vec![$(vec![$(stringify!($arg)),*]),*];
         let args = $crate::func::Args::new(a_types);
         let name = stringify!($name);
-        let fid = $crate::func::FuncDef::func_id(name, &args);
+        let fid = $crate::func::FuncDesc::func_id(name, &args);
         let r_type = stringify!($out);
-        FuncDef { name, args, r_type, fid }
+        FuncDesc { name, args, r_type, fid }
      }};
 }
 
@@ -20,7 +20,7 @@ fn type_test() {
 
 #[test]
 fn test_derive() {
-    let def1: FuncDef = def!(dd(i32, i64) -> haha);
-    let def2: FuncDef = def!(dd(i32, i64) -> haha);
+    let def1: FuncDesc = def!(dd(i32, i64) -> haha);
+    let def2: FuncDesc = def!(dd(i32, i64) -> haha);
     eprintln!("{}", def1 == def2);
 }

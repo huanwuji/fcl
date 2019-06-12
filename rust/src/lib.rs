@@ -2,7 +2,6 @@
 //#[macro_use]
 //extern crate nom;
 //extern crate pest_derive;
-#![feature(core_intrinsics)]
 
 #[macro_use]
 extern crate lazy_static;
@@ -16,4 +15,4 @@ pub mod runner;
 pub mod func;
 pub mod types;
 pub mod funcs;
-pub mod func_reg;
+pub mod func_mgt;
