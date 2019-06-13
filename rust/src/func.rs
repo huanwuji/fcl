@@ -73,8 +73,8 @@ impl fmt::Debug for FuncDesc<'_> {
 }
 
 pub struct FuncDef<'a> {
-    pub desc: &'a FuncDesc<'a>,
-    pub func: &'a FuncA,
+    pub desc: FuncDesc<'a>,
+    pub func: Box<FuncA>,
 }
 
 impl<'a> fmt::Debug for FuncDef<'a> {
@@ -91,4 +91,8 @@ pub trait FuncA {
         self.apply1(_func_def, args, None)
     }
     fn apply1(&self, _func_def: &FuncDesc, args: &[&Any], curr: Option<&Any>) -> Box<Any>;
+}
+
+pub trait Def<'a> {
+    fn def(&self) -> FuncDef<'a>;
 }

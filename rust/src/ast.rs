@@ -1,22 +1,22 @@
 use crate::func::FuncDef;
 
 #[derive(Debug)]
-pub enum AnyVal<'a> {
+pub enum AnyVal {
     Bool(bool),
     Long(i64),
     Float(f64),
-    Str(&'a str),
+    Str(&'static str),
 }
 
 pub struct ValType {}
 
-impl<'a> ValType {
+impl ValType {
     const BOOL: &'static str = "bool";
     const LONG: &'static str = "long";
     const FLOAT: &'static str = "float";
     const STR: &'static str = "str";
 
-    pub fn get_type(val: &AnyVal<'a>) -> &'a str {
+    pub fn get_type(val: &AnyVal) -> &str {
         match val {
             AnyVal::Str(_) => ValType::STR,
             AnyVal::Bool(_) => ValType::BOOL,
@@ -28,7 +28,7 @@ impl<'a> ValType {
 
 #[derive(Debug)]
 pub enum AstNode<'a> {
-    Val(AnyVal<'a>),
+    Val(AnyVal),
     Var { name: &'a str },
     Func { name: &'a str, args: Vec<AstNode<'a>>, func_def: &'a FuncDef<'a> },
     CurryingFunc { name: &'a str, args: Vec<Vec<AstNode<'a>>>, func_def: &'a FuncDef<'a> },

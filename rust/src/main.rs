@@ -1,17 +1,15 @@
-//struct Haha<'a> {
-//    arr: &'a [i32]
-//}
-//
-//struct Gaga {}
-//
-//impl<'a> Gaga {
-//    fn re(&self) -> Haha<'a> {
-//        let vec = vec![1, 2, 3];
-//        Haha { arr: vec.as_slice() }
-//    }
-//}
-//
-//fn main() {
-//    let gaga = Gaga {};
-//    gaga.re();
-//}
+use fcl::func_mgt::FuncMgt;
+use fcl::funcs::add::AddLL;
+use fcl::parser::FclParser;
+use fcl::runner::Runner;
+
+fn main() {
+    let funcs = vec![AddLL::new_def()];
+    let mut mgt = FuncMgt::new();
+    mgt.registers(funcs);
+
+    let parser = FclParser { mgt: &mgt };
+    let runner = Runner::new(&mgt);
+
+    let ast = parser.ast("add(1,2)");
+}

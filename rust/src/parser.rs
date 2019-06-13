@@ -9,9 +9,9 @@ use crate::func_mgt::FuncMgt;
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"]
-pub struct FclParser<'a> { mgt: &'a FuncMgt<'a> }
+pub struct FclParser<'a: 'static> { pub mgt: &'a FuncMgt<'a> }
 
-impl<'a, 'i: 'a> FclParser<'a> {
+impl<'a: 'static, 'i: 'a> FclParser<'a> {
     pub fn ast(&'a self, str: &'a str) -> AstNode<'a> {
         let pairs: Pairs<Rule> = FclParser::parse(Rule::functions, str)
             .unwrap_or_else(|e| panic!("{}", e));
@@ -57,13 +57,11 @@ impl<'a, 'i: 'a> FclParser<'a> {
         let func_name = pairs.next().unwrap().as_str();
         let args_pair = pairs.next().unwrap();
         let arguments = self.build_arguments(args_pair);
-        let def = {
-            self.get_def(func_name, &vec![arguments.clone()])
-        };
+        let func_def = self.get_def(func_name, &arguments);
         AstNode::Func {
             name: func_name,
             args: arguments,
-            func_def: def,
+            func_def: func_def,
         }
     }
 
@@ -77,7 +75,7 @@ impl<'a, 'i: 'a> FclParser<'a> {
                 _ => unreachable!()
             }
         }
-        let def = self.get_def(func_name.unwrap(), &args_vec);
+        let def = self.get_currying_def(func_name.unwrap(), &args_vec);
         AstNode::CurryingFunc {
             name: func_name.unwrap(),
             args: args_vec,
@@ -85,7 +83,15 @@ impl<'a, 'i: 'a> FclParser<'a> {
         }
     }
 
-    fn get_def(&'a self, name: &'a str, args: &'a Vec<Vec<AstNode<'a>>>) -> &FuncDef<'a> {
+    fn get_def<'b>(&'a self, name: &'b str, args: &'b Vec<AstNode<'a>>) -> &FuncDef<'a> {
+        let a_types = args.iter()
+            .map(|node| node.get_type())
+            .collect::<Vec<&str>>();
+        let args = Args::new(vec![a_types]);
+        self.mgt.get_by_type(name, args)
+    }
+
+    fn get_currying_def<'b>(&'a self, name: &'b str, args: &'b Vec<Vec<AstNode<'a>>>) -> &FuncDef<'a> {
         let a_types = args.iter()
             .map(|types| types.iter()
                 .map(|node| node.get_type())
@@ -121,7 +127,7 @@ impl<'a, 'i: 'a> FclParser<'a> {
         AstNode::Var { name: pair.as_str() }
     }
 
-    fn build_value(&self, pair: Pair<'i, Rule>) -> AnyVal<'a> {
+    fn build_value(&self, pair: Pair<'i, Rule>) -> AnyVal {
         match pair.as_rule() {
             Rule::string => AnyVal::Str(pair.as_str()),
             Rule::float => AnyVal::Float(pair.as_str().parse().unwrap()),

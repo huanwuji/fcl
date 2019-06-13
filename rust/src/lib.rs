@@ -3,8 +3,8 @@
 //extern crate nom;
 //extern crate pest_derive;
 
-#[macro_use]
-extern crate lazy_static;
+//#[macro_use]
+//extern crate lazy_static;
 
 #[macro_use]
 pub mod macros;

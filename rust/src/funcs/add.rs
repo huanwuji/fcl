@@ -4,47 +4,46 @@ use crate::ast::AstNode;
 use crate::func::*;
 use crate::types::*;
 
-lazy_static! {
-    static ref ADD_LL: FuncDesc<'static> = def!( add(i32, i32) -> i32 );
-}
+pub struct AddLL {}
 
-pub struct Add {}
-
-impl FuncA for Add {
-    #[allow(unused)]
+impl FuncA for AddLL {
     fn eval(&self, ctx: Context, nodes: Vec<AstNode>, curr: Option<&Any>) -> Box<Any> {
         unimplemented!()
     }
-    #[allow(unused)]
+
     fn apply1(&self, _func_def: &FuncDesc, args: &[&Any], curr: Option<&Any>) -> Box<Any> {
-        if _func_def.fid == ADD_LL.fid {
-            match args {
-                &[a, b] => {
-                    let r = self.add(*cast::<i32>(a), *cast::<i32>(b));
-                    Box::new(r)
-                }
-                _ => panic!("Not coverd")
-            }
+        if let &[a, b] = args {
+            let r = self.add(*cast::<i64>(a), *cast::<i64>(b));
+            Box::new(r)
         } else {
             panic!("Not coverd")
         }
     }
 }
 
-impl Add {
-    pub fn new() -> Add {
-        Add {}
+impl AddLL {
+    pub fn new_def() -> FuncDef<'static> {
+        FuncDef {
+            desc: def!( add(long, long) -> long ),
+            func: Box::new(AddLL::new()),
+        }
     }
-    fn add(&self, v1: i32, v2: i32) -> i32 {
+
+    pub fn new() -> AddLL {
+        AddLL {}
+    }
+
+    fn add(&self, v1: i64, v2: i64) -> i64 {
         v1 + v2
     }
 }
 
 #[test]
 fn add_test() {
+//    let ref ADD_LL: FuncDesc<'static> = def!( add(i32, i32) -> i32 );
     let def: FuncDesc = def!( add(i32, i32) -> i32 );
     eprintln!("def = {:?}", def);
-    let _result = Add {}.apply(&def, &[&2, &3]);
+    let _result = AddLL {}.apply(&def, &[&2, &3]);
 //    println!("{}", stringify!(_result));
     println!("{}", cast::<i32>(&*_result));
 }
