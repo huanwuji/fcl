@@ -10,12 +10,12 @@ use crate::func_mgt::FuncMgt;
 use crate::parser::FclParser;
 
 #[derive(Hash, Eq, PartialEq)]
-pub enum Args<'a> {
-    ATypes(Vec<&'a str>),
-    CTypes(Vec<Args<'a>>),
+pub enum Args {
+    ATypes(Vec<&'static str>),
+    CTypes(Vec<Args>),
 }
 
-impl<'a> Args<'a> {
+impl Args {
     pub fn new_s(a_types: Vec<&str>) -> Args {
         Args::ATypes(a_types)
     }
@@ -30,7 +30,7 @@ impl<'a> Args<'a> {
             }
         }
     }
-    fn display(args: &'a Args) -> String {
+    fn display(args: &Args) -> String {
         match args {
             Args::ATypes(types) => format!("({})", types.join(",")),
             Args::CTypes(types_arr) => types_arr.iter()
@@ -40,22 +40,22 @@ impl<'a> Args<'a> {
     }
 }
 
-impl<'a> fmt::Debug for Args<'a> {
+impl fmt::Debug for Args {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", Args::display(self))
     }
 }
 
 #[derive(PartialEq, Eq, Hash)]
-pub struct FuncDesc<'a> {
-    pub name: &'a str,
-    pub args: Args<'a>,
-    pub r_type: &'a str,
+pub struct FuncDesc {
+    pub name: &'static str,
+    pub args: Args,
+    pub r_type: &'static str,
     pub fid: u64,
 }
 
-impl<'a> FuncDesc<'a> {
-    pub fn new(name: &'a str, a_types: &'a Vec<Vec<&str>>, r_type: &'a str) -> FuncDesc<'a> {
+impl FuncDesc {
+    pub fn new(name: &str, a_types: &Vec<Vec<&str>>, r_type: &str) -> FuncDesc<> {
         let args = Args::new(a_types.clone());
         let fid = FuncDesc::func_id(name, &args);
         FuncDesc { name, args, r_type, fid }
@@ -69,48 +69,44 @@ impl<'a> FuncDesc<'a> {
     }
 }
 
-impl fmt::Debug for FuncDesc<'_> {
+impl fmt::Debug for FuncDesc {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}{} -> {}", self.name, Args::display(&self.args), self.r_type)
     }
 }
 
-pub struct FuncDef<'a> {
-    pub desc: FuncDesc<'a>,
-    pub func: Box<FuncA<'a>>,
+pub struct FuncDef {
+    pub desc: FuncDesc,
+    pub func: Box<FuncA>,
 }
 
-impl<'a> fmt::Debug for FuncDef<'a> {
+impl fmt::Debug for FuncDef {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(f, "{}: {:?}", stringify!(self.func), self.desc)
     }
 }
 
-pub struct Context<'a> {
-    pub scope: HashMap<&'a str, AnyVal<'a>>,
-    pub mgt: &'a FuncMgt<'a>,
-    pub parser: &'a FclParser<'a>,
-    pub eval: &'a Eval<'a>,
+pub struct Context {
+    pub scope: HashMap<&'static str, AnyVal>,
+    pub mgt: &'static FuncMgt,
+    pub parser: &'static FclParser,
+    pub eval: &'static Eval,
 }
 
-pub trait FuncA<'a> {
-    fn eval(&self, ctx: &'a Context<'a>, func_def: &'a FuncDef<'a>,
-            nodes: &'a Vec<AstNode<'a>>, curr: &'a AnyVal<'a>) -> AnyVal<'a> {
+pub trait FuncA {
+    fn eval(&self, ctx: &Context, func_def: &FuncDef,
+            nodes: &Vec<AstNode>, curr: &AnyVal) -> AnyVal {
         let any_vals = ctx.eval.eval_vec(ctx, nodes, curr);
         self.apply1(ctx, func_def, any_vals, curr)
     }
-    fn eval_currying(&self, ctx: &'a Context<'a>, func_def: &'a FuncDef<'a>,
-                     nodes: &'a Vec<Vec<AstNode<'a>>>, curr: &'a AnyVal<'a>) -> AnyVal<'a> {
+    fn eval_currying(&self, ctx: &Context, func_def: &FuncDef,
+                     nodes: &Vec<Vec<AstNode>>, curr: &AnyVal) -> AnyVal {
         unimplemented!()
     }
-    fn apply(&self, ctx: &'a Context<'a>, func_def: &'a FuncDef<'a>,
-             args: Vec<AnyVal<'a>>) -> AnyVal<'a> {
+    fn apply(&self, ctx: &Context, func_def: &FuncDef,
+             args: Vec<AnyVal>) -> AnyVal {
         self.apply1(ctx, func_def, args, &AnyVal::None)
     }
-    fn apply1(&self, ctx: &'a Context<'a>, func_def: &'a FuncDef<'a>,
-              args: Vec<AnyVal<'a>>, curr: &'a AnyVal<'a>) -> AnyVal<'a>;
-}
-
-pub trait Def<'a> {
-    fn def(&self) -> FuncDef<'a>;
+    fn apply1(&self, ctx: &Context, func_def: &FuncDef,
+              args: Vec<AnyVal>, curr: &AnyVal) -> AnyVal;
 }

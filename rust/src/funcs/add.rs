@@ -3,9 +3,9 @@ use crate::func::*;
 
 pub struct AddLL {}
 
-impl<'a> FuncA<'a> for AddLL {
-    fn apply1(&self, ctx: &'a Context<'a>, func_def: &'a FuncDef<'a>,
-              args: Vec<AnyVal<'a>>, curr: &'a AnyVal<'a>) -> AnyVal<'a> {
+impl FuncA for AddLL {
+    fn apply1(&self, ctx: &Context, func_def: &FuncDef,
+              args: Vec<AnyVal>, curr: &AnyVal) -> AnyVal {
         if let &[AnyVal::Long(a), AnyVal::Long(b)] = args.as_slice() {
             let r = self.add(a, b);
             AnyVal::Long(r)
@@ -15,8 +15,8 @@ impl<'a> FuncA<'a> for AddLL {
     }
 }
 
-impl<'a> AddLL {
-    pub fn new_def() -> FuncDef<'a> {
+impl AddLL {
+    pub fn new_def() -> FuncDef {
         FuncDef {
             desc: def!( add(long, long) -> long ),
             func: Box::new(AddLL::new()),

@@ -3,12 +3,12 @@ use std::any::Any;
 use crate::func::FuncDef;
 
 #[derive(Debug, Copy, Clone)]
-pub enum AnyVal<'a> {
+pub enum AnyVal {
     None,
     Bool(bool),
     Long(i64),
     Float(f64),
-    Str(&'a str),
+    Str(&'static str),
 //    Any { val: Box<Any>, any_type: &'a str },
 }
 
@@ -22,7 +22,7 @@ impl ValType {
     pub const STR: &'static str = "str";
     pub const ANY: &'static str = "any";
 
-    pub fn get_type<'a>(val: &AnyVal<'a>) -> &'a str {
+    pub fn get_type(val: &AnyVal) -> &str {
         match val {
             AnyVal::None => ValType::NONE,
             AnyVal::Str(_) => ValType::STR,
@@ -35,18 +35,18 @@ impl ValType {
 }
 
 #[derive(Debug)]
-pub enum AstNode<'a> {
-    Val(AnyVal<'a>),
-    Var { name: &'a str },
-    Func { name: &'a str, args: Vec<AstNode<'a>>, func_def: &'a FuncDef<'a> },
-    CurryingFunc { name: &'a str, args: Vec<Vec<AstNode<'a>>>, func_def: &'a FuncDef<'a> },
-    FlowFunc { exprs: Vec<AstNode<'a>> },
-    Exprs(Vec<AstNode<'a>>),
+pub enum AstNode {
+    Val(AnyVal),
+    Var { name: &'static str },
+    Func { name: &'static str, args: Vec<AstNode>, func_def: &'static FuncDef },
+    CurryingFunc { name: &'static str, args: Vec<Vec<AstNode>>, func_def: &'static FuncDef },
+    FlowFunc { exprs: Vec<AstNode> },
+    Exprs(Vec<AstNode>),
     FuncEnd,
 }
 
-impl<'a> AstNode<'a> {
-    const VAR: &'a str = "var";
+impl AstNode {
+    const VAR: &'static str = "var";
     pub fn get_type(&self) -> &str {
         match self {
             AstNode::Val(val) => ValType::get_type(val),
