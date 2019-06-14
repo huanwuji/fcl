@@ -1,10 +1,13 @@
 use core::fmt;
-use std::any::Any;
 use std::collections::hash_map::DefaultHasher;
+use std::collections::HashMap;
 use std::fmt::Formatter;
 use std::hash::{Hash, Hasher};
 
-use crate::ast::AstNode;
+use crate::ast::{AnyVal, AstNode};
+use crate::eval::Eval;
+use crate::func_mgt::FuncMgt;
+use crate::parser::FclParser;
 
 #[derive(Hash, Eq, PartialEq)]
 pub enum Args<'a> {
@@ -74,7 +77,7 @@ impl fmt::Debug for FuncDesc<'_> {
 
 pub struct FuncDef<'a> {
     pub desc: FuncDesc<'a>,
-    pub func: Box<FuncA>,
+    pub func: Box<FuncA<'a>>,
 }
 
 impl<'a> fmt::Debug for FuncDef<'a> {
@@ -83,14 +86,29 @@ impl<'a> fmt::Debug for FuncDef<'a> {
     }
 }
 
-pub struct Context {}
+pub struct Context<'a> {
+    pub scope: HashMap<&'a str, AnyVal<'a>>,
+    pub mgt: &'a FuncMgt<'a>,
+    pub parser: &'a FclParser<'a>,
+    pub eval: &'a Eval<'a>,
+}
 
-pub trait FuncA {
-    fn eval(&self, ctx: Context, nodes: Vec<AstNode>, curr: Option<&Any>) -> Box<Any>;
-    fn apply(&self, _func_def: &FuncDesc, args: &[&Any]) -> Box<Any> {
-        self.apply1(_func_def, args, None)
+pub trait FuncA<'a> {
+    fn eval(&self, ctx: &'a Context<'a>, func_def: &'a FuncDef<'a>,
+            nodes: &'a Vec<AstNode<'a>>, curr: &'a AnyVal<'a>) -> AnyVal<'a> {
+        let any_vals = ctx.eval.eval_vec(ctx, nodes, curr);
+        self.apply1(ctx, func_def, any_vals, curr)
     }
-    fn apply1(&self, _func_def: &FuncDesc, args: &[&Any], curr: Option<&Any>) -> Box<Any>;
+    fn eval_currying(&self, ctx: &'a Context<'a>, func_def: &'a FuncDef<'a>,
+                     nodes: &'a Vec<Vec<AstNode<'a>>>, curr: &'a AnyVal<'a>) -> AnyVal<'a> {
+        unimplemented!()
+    }
+    fn apply(&self, ctx: &'a Context<'a>, func_def: &'a FuncDef<'a>,
+             args: Vec<AnyVal<'a>>) -> AnyVal<'a> {
+        self.apply1(ctx, func_def, args, &AnyVal::None)
+    }
+    fn apply1(&self, ctx: &'a Context<'a>, func_def: &'a FuncDef<'a>,
+              args: Vec<AnyVal<'a>>, curr: &'a AnyVal<'a>) -> AnyVal<'a>;
 }
 
 pub trait Def<'a> {

@@ -2,12 +2,12 @@ use std::collections::HashMap;
 
 use crate::func::{Args, FuncDef, FuncDesc};
 
-pub struct FuncMgt<'a: 'static> {
+pub struct FuncMgt<'a> {
     funcs: HashMap<u64, FuncDef<'a>>
 }
 
-impl<'a: 'static> FuncMgt<'a> {
-    pub fn new() -> FuncMgt<'a> {
+impl<'a> FuncMgt<'a> {
+    pub fn new() -> FuncMgt<'static> {
         FuncMgt { funcs: HashMap::new() }
     }
 

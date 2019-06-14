@@ -1,28 +1,22 @@
-use std::any::Any;
-
-use crate::ast::AstNode;
+use crate::ast::AnyVal;
 use crate::func::*;
-use crate::types::*;
 
 pub struct AddLL {}
 
-impl FuncA for AddLL {
-    fn eval(&self, ctx: Context, nodes: Vec<AstNode>, curr: Option<&Any>) -> Box<Any> {
-        unimplemented!()
-    }
-
-    fn apply1(&self, _func_def: &FuncDesc, args: &[&Any], curr: Option<&Any>) -> Box<Any> {
-        if let &[a, b] = args {
-            let r = self.add(*cast::<i64>(a), *cast::<i64>(b));
-            Box::new(r)
+impl<'a> FuncA<'a> for AddLL {
+    fn apply1(&self, ctx: &'a Context<'a>, func_def: &'a FuncDef<'a>,
+              args: Vec<AnyVal<'a>>, curr: &'a AnyVal<'a>) -> AnyVal<'a> {
+        if let &[AnyVal::Long(a), AnyVal::Long(b)] = args.as_slice() {
+            let r = self.add(a, b);
+            AnyVal::Long(r)
         } else {
             panic!("Not coverd")
         }
     }
 }
 
-impl AddLL {
-    pub fn new_def() -> FuncDef<'static> {
+impl<'a> AddLL {
+    pub fn new_def() -> FuncDef<'a> {
         FuncDef {
             desc: def!( add(long, long) -> long ),
             func: Box::new(AddLL::new()),
@@ -42,8 +36,8 @@ impl AddLL {
 fn add_test() {
 //    let ref ADD_LL: FuncDesc<'static> = def!( add(i32, i32) -> i32 );
     let def: FuncDesc = def!( add(i32, i32) -> i32 );
-    eprintln!("def = {:?}", def);
-    let _result = AddLL {}.apply(&def, &[&2, &3]);
+//    eprintln!("def = {:?}", def);
+//    let _result = AddLL {}.apply(&def, &[&2, &3]);
 //    println!("{}", stringify!(_result));
-    println!("{}", cast::<i32>(&*_result));
+//    println!("{}", cast::<i32>(&*_result));
 }

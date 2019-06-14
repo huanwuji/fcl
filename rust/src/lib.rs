@@ -9,10 +9,10 @@
 #[macro_use]
 pub mod macros;
 
+pub mod func_mgt;
 pub mod ast;
 pub mod parser;
-pub mod runner;
+pub mod eval;
 pub mod func;
 pub mod types;
 pub mod funcs;
-pub mod func_mgt;

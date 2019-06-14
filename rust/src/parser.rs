@@ -9,9 +9,9 @@ use crate::func_mgt::FuncMgt;
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"]
-pub struct FclParser<'a: 'static> { pub mgt: &'a FuncMgt<'a> }
+pub struct FclParser<'a> { pub mgt: &'a FuncMgt<'a> }
 
-impl<'a: 'static, 'i: 'a> FclParser<'a> {
+impl<'a, 'i: 'a> FclParser<'a> {
     pub fn ast(&'a self, str: &'a str) -> AstNode<'a> {
         let pairs: Pairs<Rule> = FclParser::parse(Rule::functions, str)
             .unwrap_or_else(|e| panic!("{}", e));
