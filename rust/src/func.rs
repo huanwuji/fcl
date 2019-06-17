@@ -11,15 +11,15 @@ use crate::parser::FclParser;
 
 #[derive(Hash, Eq, PartialEq)]
 pub enum Args {
-    ATypes(Vec<&'static str>),
+    ATypes(Vec<String>),
     CTypes(Vec<Args>),
 }
 
 impl Args {
-    pub fn new_s(a_types: Vec<&str>) -> Args {
+    pub fn new_s(a_types: Vec<String>) -> Args {
         Args::ATypes(a_types)
     }
-    pub fn new(a_types: Vec<Vec<&str>>) -> Args {
+    pub fn new(a_types: Vec<Vec<String>>) -> Args {
         match a_types.as_slice() {
             [arg1] => Args::ATypes(arg1.clone()),
             _ => {
@@ -48,16 +48,16 @@ impl fmt::Debug for Args {
 
 #[derive(PartialEq, Eq, Hash)]
 pub struct FuncDesc {
-    pub name: &'static str,
+    pub name: String,
     pub args: Args,
-    pub r_type: &'static str,
+    pub r_type: String,
     pub fid: u64,
 }
 
 impl FuncDesc {
-    pub fn new(name: &str, a_types: &Vec<Vec<&str>>, r_type: &str) -> FuncDesc<> {
+    pub fn new(name: String, a_types: &Vec<Vec<String>>, r_type: String) -> FuncDesc<> {
         let args = Args::new(a_types.clone());
-        let fid = FuncDesc::func_id(name, &args);
+        let fid = FuncDesc::func_id(name.as_str(), &args);
         FuncDesc { name, args, r_type, fid }
     }
 
@@ -86,11 +86,11 @@ impl fmt::Debug for FuncDef {
     }
 }
 
-pub struct Context {
+pub struct Context<'r> {
     pub scope: HashMap<&'static str, AnyVal>,
-    pub mgt: &'static FuncMgt,
-    pub parser: &'static FclParser,
-    pub eval: &'static Eval,
+    pub mgt: &'r FuncMgt,
+    pub parser: &'r FclParser<'r>,
+    pub eval: &'r Eval<'r>,
 }
 
 pub trait FuncA {

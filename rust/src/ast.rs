@@ -2,13 +2,13 @@ use std::any::Any;
 
 use crate::func::FuncDef;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub enum AnyVal {
     None,
     Bool(bool),
     Long(i64),
     Float(f64),
-    Str(&'static str),
+    Str(String),
 //    Any { val: Box<Any>, any_type: &'a str },
 }
 
@@ -35,24 +35,24 @@ impl ValType {
 }
 
 #[derive(Debug)]
-pub enum AstNode {
+pub enum AstNode<'a> {
     Val(AnyVal),
-    Var { name: &'static str },
-    Func { name: &'static str, args: Vec<AstNode>, func_def: &'static FuncDef },
-    CurryingFunc { name: &'static str, args: Vec<Vec<AstNode>>, func_def: &'static FuncDef },
-    FlowFunc { exprs: Vec<AstNode> },
-    Exprs(Vec<AstNode>),
+    Var { name: String },
+    Func { name: String, args: Vec<AstNode<'a>>, func_def: &'a FuncDef },
+    CurryingFunc { name: String, args: Vec<Vec<AstNode<'a>>>, func_def: &'a FuncDef },
+    FlowFunc { exprs: Vec<AstNode<'a>> },
+    Exprs(Vec<AstNode<'a>>),
     FuncEnd,
 }
 
-impl AstNode {
+impl<'a> AstNode<'a> {
     const VAR: &'static str = "var";
     pub fn get_type(&self) -> &str {
         match self {
             AstNode::Val(val) => ValType::get_type(val),
             AstNode::Var { .. } => AstNode::VAR,
-            AstNode::Func { func_def, .. } => func_def.desc.r_type,
-            AstNode::CurryingFunc { func_def, .. } => func_def.desc.r_type,
+            AstNode::Func { func_def, .. } => func_def.desc.r_type.as_str(),
+            AstNode::CurryingFunc { func_def, .. } => func_def.desc.r_type.as_str(),
             AstNode::FlowFunc { exprs } => exprs.last().unwrap().get_type(),
             _ => panic!("Unsupport astNode type")
         }

@@ -3,12 +3,12 @@ use crate::func::FuncDesc;
 #[macro_export]
 macro_rules! def {
      ( $name:ident$(($($arg:ty),* ))* -> $out:ty ) => {{
-        let a_types = vec![$(vec![$(stringify!($arg)),*]),*];
+        let a_types = vec![$(vec![$(String::from(stringify!($arg))),*]),*];
         let args = $crate::func::Args::new(a_types);
         let name = stringify!($name);
         let fid = $crate::func::FuncDesc::func_id(name, &args);
         let r_type = stringify!($out);
-        FuncDesc { name, args, r_type, fid }
+        FuncDesc { name: String::from(name), args, r_type: String::from(r_type), fid }
      }};
 }
 

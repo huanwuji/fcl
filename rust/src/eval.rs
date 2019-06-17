@@ -2,11 +2,11 @@ use crate::ast::{AnyVal, AstNode};
 use crate::func::{Context, FuncDef};
 use crate::func_mgt::FuncMgt;
 
-pub struct Eval {
-    mgt: &'static FuncMgt
+pub struct Eval<'a> {
+    pub mgt: &'a FuncMgt
 }
 
-impl Eval {
+impl<'a> Eval<'a> {
     pub fn eval_vec(&self, ctx: &Context, ast: &Vec<AstNode>,
                     curr: &AnyVal) -> Vec<AnyVal> {
         ast.iter()
@@ -16,7 +16,7 @@ impl Eval {
 
     pub fn eval(&self, ctx: &Context, ast: &AstNode, curr: &AnyVal) -> AnyVal {
         match ast {
-            AstNode::Val(any_val) => *any_val,
+            AstNode::Val(ref any_val) => any_val.clone(),
 //            AstNode::Var { name } => {
 //                ctx.scope.get(name).map(|v| AnyVal::Any {
 //                    val: v,

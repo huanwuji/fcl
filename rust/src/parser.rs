@@ -9,16 +9,16 @@ use crate::func_mgt::FuncMgt;
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"]
-pub struct FclParser { pub mgt: &'static FuncMgt }
+pub struct FclParser<'a> { pub mgt: &'a FuncMgt }
 
-impl<'a, 'i: 'a> FclParser {
-    pub fn ast(&self, str: &'a str) -> AstNode {
+impl<'a> FclParser<'a> {
+    pub fn ast(&self, str: &'static str) -> AstNode {
         let pairs: Pairs<Rule> = FclParser::parse(Rule::functions, str)
             .unwrap_or_else(|e| panic!("{}", e));
         self.build_functions(pairs)
     }
 
-    fn build_functions(&self, pairs: Pairs<'i, Rule>) -> AstNode {
+    fn build_functions(&self, pairs: Pairs<Rule>) -> AstNode {
         let mut exprs = vec![];
         for pair in pairs {
             match pair.as_rule() {
@@ -35,7 +35,7 @@ impl<'a, 'i: 'a> FclParser {
         AstNode::Exprs(exprs)
     }
 
-    fn build_function(&self, pair: Pair<'i, Rule>) -> AstNode {
+    fn build_function(&self, pair: Pair<Rule>) -> AstNode {
         match pair.as_rule() {
             Rule::flow_func => self.build_flow_func(pair),
             Rule::currying_func => self.build_currying_func(pair),
@@ -44,7 +44,7 @@ impl<'a, 'i: 'a> FclParser {
         }
     }
 
-    fn build_flow_func(&self, pair: Pair<'i, Rule>) -> AstNode {
+    fn build_flow_func(&self, pair: Pair<Rule>) -> AstNode {
         let mut functions = vec![];
         for inner_pair in pair.into_inner() {
             functions.push(self.build_function(inner_pair))
@@ -52,20 +52,20 @@ impl<'a, 'i: 'a> FclParser {
         AstNode::FlowFunc { exprs: functions }
     }
 
-    fn build_normal_func(&self, pair: Pair<'i, Rule>) -> AstNode {
+    fn build_normal_func(&self, pair: Pair<Rule>) -> AstNode {
         let mut pairs = pair.into_inner();
         let func_name = pairs.next().unwrap().as_str();
         let args_pair = pairs.next().unwrap();
         let arguments = self.build_arguments(args_pair);
         let func_def = self.get_def(func_name, &arguments);
         AstNode::Func {
-            name: func_name,
+            name: String::from(func_name),
             args: arguments,
             func_def: func_def,
         }
     }
 
-    fn build_currying_func(&self, pair: Pair<'i, Rule>) -> AstNode {
+    fn build_currying_func(&self, pair: Pair<Rule>) -> AstNode {
         let mut func_name = None;
         let mut args_vec = vec![];
         for inner_pair in pair.into_inner() {
@@ -77,32 +77,32 @@ impl<'a, 'i: 'a> FclParser {
         }
         let def = self.get_currying_def(func_name.unwrap(), &args_vec);
         AstNode::CurryingFunc {
-            name: func_name.unwrap(),
+            name: String::from(func_name.unwrap()),
             args: args_vec,
             func_def: def,
         }
     }
 
-    fn get_def<'b>(&self, name: &'b str, args: &'b Vec<AstNode>) -> &FuncDef {
+    fn get_def<'b>(&self, name: &'b str, args: &'b Vec<AstNode<'a>>) -> &FuncDef {
         let a_types = args.iter()
-            .map(|node| node.get_type())
-            .collect::<Vec<&str>>();
+            .map(|node| String::from(node.get_type()))
+            .collect::<Vec<String>>();
         let args = Args::new(vec![a_types]);
         self.mgt.get_by_type(name, args)
     }
 
-    fn get_currying_def<'b>(&self, name: &'b str, args: &'b Vec<Vec<AstNode>>) -> &FuncDef {
+    fn get_currying_def<'b>(&self, name: &'b str, args: &'b Vec<Vec<AstNode<'a>>>) -> &FuncDef {
         let a_types = args.iter()
             .map(|types| types.iter()
-                .map(|node| node.get_type())
-                .collect::<Vec<&str>>()
+                .map(|node| String::from(node.get_type()))
+                .collect::<Vec<String>>()
             )
-            .collect::<Vec<Vec<&str>>>();
+            .collect::<Vec<Vec<String>>>();
         let args = Args::new(a_types);
         self.mgt.get_by_type(name, args)
     }
 
-    fn build_arguments(&self, pair: Pair<'i, Rule>) -> Vec<AstNode> {
+    fn build_arguments(&self, pair: Pair<Rule>) -> Vec<AstNode> {
         let mut args = vec![];
         for arg_pair in pair.into_inner() {
             args.push(self.build_argument(arg_pair));
@@ -110,7 +110,7 @@ impl<'a, 'i: 'a> FclParser {
         args
     }
 
-    fn build_argument(&self, pair: Pair<'i, Rule>) -> AstNode {
+    fn build_argument(&self, pair: Pair<Rule>) -> AstNode {
         let arg_pair = pair.into_inner().next().unwrap();
         match arg_pair.as_rule() {
             Rule::function => self.build_function(arg_pair),
@@ -123,13 +123,13 @@ impl<'a, 'i: 'a> FclParser {
         }
     }
 
-    fn build_variable(&self, pair: Pair<'i, Rule>) -> AstNode {
-        AstNode::Var { name: pair.as_str() }
+    fn build_variable(&self, pair: Pair<Rule>) -> AstNode {
+        AstNode::Var { name: String::from(pair.as_str()) }
     }
 
-    fn build_value(&self, pair: Pair<'i, Rule>) -> AnyVal {
+    fn build_value(&self, pair: Pair<Rule>) -> AnyVal {
         match pair.as_rule() {
-            Rule::string => AnyVal::Str(pair.as_str()),
+            Rule::string => AnyVal::Str(String::from(pair.as_str())),
             Rule::float => AnyVal::Float(pair.as_str().parse().unwrap()),
             Rule::long => AnyVal::Long(pair.as_str().parse().unwrap()),
             Rule::boolean => AnyVal::Bool(pair.as_str().parse().unwrap()),
