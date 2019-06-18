@@ -89,8 +89,8 @@ impl fmt::Debug for FuncDef {
 pub struct Context<'r> {
     pub scope: HashMap<&'static str, AnyVal>,
     pub mgt: &'r FuncMgt,
-    pub parser: &'r FclParser<'r>,
-    pub eval: &'r Eval<'r>,
+    pub parser: &'r FclParser,
+    pub eval: &'r Eval,
 }
 
 pub trait FuncA {

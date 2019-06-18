@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use pest_derive::*;
@@ -9,10 +11,10 @@ use crate::func_mgt::FuncMgt;
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"]
-pub struct FclParser<'a> { pub mgt: &'a FuncMgt }
+pub struct FclParser { pub mgt: Rc<FuncMgt> }
 
-impl<'a> FclParser<'a> {
-    pub fn ast(&self, str: &'static str) -> AstNode {
+impl FclParser {
+    pub fn ast(&self, str: &str) -> AstNode {
         let pairs: Pairs<Rule> = FclParser::parse(Rule::functions, str)
             .unwrap_or_else(|e| panic!("{}", e));
         self.build_functions(pairs)
@@ -83,7 +85,7 @@ impl<'a> FclParser<'a> {
         }
     }
 
-    fn get_def<'b>(&self, name: &'b str, args: &'b Vec<AstNode<'a>>) -> &FuncDef {
+    fn get_def<'b>(&self, name: &'b str, args: &'b Vec<AstNode>) -> &FuncDef {
         let a_types = args.iter()
             .map(|node| String::from(node.get_type()))
             .collect::<Vec<String>>();
@@ -91,7 +93,7 @@ impl<'a> FclParser<'a> {
         self.mgt.get_by_type(name, args)
     }
 
-    fn get_currying_def<'b>(&self, name: &'b str, args: &'b Vec<Vec<AstNode<'a>>>) -> &FuncDef {
+    fn get_currying_def<'b>(&self, name: &'b str, args: &'b Vec<Vec<AstNode>>) -> &FuncDef {
         let a_types = args.iter()
             .map(|types| types.iter()
                 .map(|node| String::from(node.get_type()))

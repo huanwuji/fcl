@@ -1,12 +1,14 @@
+use std::rc::Rc;
+
 use crate::ast::{AnyVal, AstNode};
 use crate::func::{Context, FuncDef};
 use crate::func_mgt::FuncMgt;
 
-pub struct Eval<'a> {
-    pub mgt: &'a FuncMgt
+pub struct Eval {
+    pub mgt: Rc<FuncMgt>
 }
 
-impl<'a> Eval<'a> {
+impl Eval {
     pub fn eval_vec(&self, ctx: &Context, ast: &Vec<AstNode>,
                     curr: &AnyVal) -> Vec<AnyVal> {
         ast.iter()
