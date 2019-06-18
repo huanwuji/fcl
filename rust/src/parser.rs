@@ -115,12 +115,12 @@ impl FclParser {
     fn build_argument(&self, pair: Pair<Rule>) -> AstNode {
         let arg_pair = pair.into_inner().next().unwrap();
         match arg_pair.as_rule() {
-            Rule::function => self.build_function(arg_pair),
+            Rule::function => self.build_function(arg_pair.into_inner().next().unwrap()),
             Rule::value => {
                 let any_val = self.build_value(arg_pair.into_inner().next().unwrap());
                 AstNode::Val(any_val)
             }
-            Rule::variable => self.build_variable(arg_pair),
+            Rule::variable => self.build_variable(arg_pair.into_inner().next().unwrap()),
             _ => panic!("UnMatched rule")
         }
     }
