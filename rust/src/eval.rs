@@ -18,13 +18,12 @@ impl Eval {
 
     pub fn eval(&self, ctx: &Context, ast: &AstNode, curr: &AnyVal) -> AnyVal {
         match ast {
+            AstNode::Curr => curr.clone(),
             AstNode::Val(ref any_val) => any_val.clone(),
-//            AstNode::Var { name } => {
-//                ctx.scope.get(name).map(|v| AnyVal::Any {
-//                    val: v,
-//                    any_type: ValType::ANY,
-//                }).unwrap_or(AnyVal::None)
-//            }
+            AstNode::Var { name } => {
+                ctx.scope.get(name.as_str()).map(|v| v.clone())
+                    .unwrap_or(AnyVal::None)
+            }
             AstNode::Func { args, func_def, .. } =>
                 self.eval_func(ctx, args, func_def, curr),
             AstNode::CurryingFunc { args, func_def, .. } =>
@@ -48,15 +47,10 @@ impl Eval {
 
     fn eval_flow_func(&self, ctx: &Context,
                       exprs: &Vec<AstNode>, curr: &AnyVal) -> AnyVal {
-//        let mut curr = curr;
-        let mut result = AnyVal::None;
-//        for node in exprs {
-//            result = match node {
-//                AstNode::FuncEnd => AnyVal::None,
-//                _ => self.eval(ctx, node, &result),
-//            };
-////            curr = &result;
-//        }
+        let mut result = curr.clone();
+        for node in exprs {
+            result = self.eval(ctx, node, &result);
+        }
         result
     }
 
@@ -64,7 +58,7 @@ impl Eval {
                   exprs: &Vec<AstNode>, curr: &AnyVal) -> AnyVal {
         let mut result = AnyVal::None;
         for node in exprs {
-            result = self.eval(ctx, node, curr);
+            result = self.eval(ctx, node, &result);
         }
         result
     }

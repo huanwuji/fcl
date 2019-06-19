@@ -8,7 +8,8 @@ pub fn cast<T: Any>(v: &dyn Any) -> &T {
 }
 
 #[inline]
-pub fn any<T: Any>(v: &T) -> &dyn Any {
+pub fn
+any<T: Any>(v: &T) -> &dyn Any {
     v as &dyn Any
 }
 

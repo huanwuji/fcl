@@ -12,11 +12,12 @@ char = {
 }
 inner_chars = @{ char* }
 string = ${ ("\"" ~ PUSH(("\"")*) ~ inner_chars ~ "\"" ~ POP) | ("'" ~ PUSH(("'")*) ~ inner_chars ~ "'" ~ POP) }
+curr = @{ "_" }
 
 value = ${ string | float | long | boolean | null }
 variable = @{ (ASCII_ALPHANUMERIC | "_" | "$")+ }
 func_name = @{ (!("(" | ")" | "." | ",") ~ ANY)+ }
-argument = { function | value | variable }
+argument = { curr | function | value | variable  }
 arguments = { (argument ~ ("," ~ argument)*)? }
 normal_func = { func_name ~ "(" ~ arguments ~ ")" }
 currying_func = { func_name ~ ("(" ~ arguments? ~ ")"){2,} }

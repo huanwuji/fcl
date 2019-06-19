@@ -26,7 +26,7 @@ impl FclParser {
             match pair.as_rule() {
                 Rule::function => {
                     for func_pair in pair.into_inner() {
-                        exprs.push(self.build_function(func_pair));
+                        exprs.push(self.build_function(func_pair, None));
                     }
                 }
                 Rule::func_end => exprs.push(AstNode::FuncEnd),
@@ -37,47 +37,50 @@ impl FclParser {
         AstNode::Exprs(exprs)
     }
 
-    fn build_function(&self, pair: Pair<Rule>) -> AstNode {
+    fn build_function(&self, pair: Pair<Rule>, curr_type: Option<&str>) -> AstNode {
         match pair.as_rule() {
             Rule::flow_func => self.build_flow_func(pair),
-            Rule::currying_func => self.build_currying_func(pair),
-            Rule::normal_func => self.build_normal_func(pair),
+            Rule::currying_func => self.build_currying_func(pair, curr_type),
+            Rule::normal_func => self.build_normal_func(pair, curr_type),
             _ => unreachable!()
         }
     }
 
     fn build_flow_func(&self, pair: Pair<Rule>) -> AstNode {
         let mut functions = vec![];
+        let mut pre_r_type = None;
         for inner_pair in pair.into_inner() {
-            functions.push(self.build_function(inner_pair))
+            let node = self.build_function(inner_pair, pre_r_type);
+            pre_r_type = Some(AstNode::get_r_type_raw(&node, pre_r_type).as_str());
+            functions.push(node);
         }
         AstNode::FlowFunc { exprs: functions }
     }
 
-    fn build_normal_func(&self, pair: Pair<Rule>) -> AstNode {
+    fn build_normal_func(&self, pair: Pair<Rule>, curr_type: Option<&str>) -> AstNode {
         let mut pairs = pair.into_inner();
         let func_name = pairs.next().unwrap().as_str();
         let args_pair = pairs.next().unwrap();
-        let arguments = self.build_arguments(args_pair);
-        let func_def = self.get_def(func_name, &arguments);
+        let arguments = self.build_arguments(args_pair, curr_type);
+        let func_def = self.get_def(func_name, &arguments, curr_type);
         AstNode::Func {
             name: String::from(func_name),
             args: arguments,
-            func_def: func_def,
+            func_def,
         }
     }
 
-    fn build_currying_func(&self, pair: Pair<Rule>) -> AstNode {
+    fn build_currying_func(&self, pair: Pair<Rule>, curr_type: Option<&str>) -> AstNode {
         let mut func_name = None;
         let mut args_vec = vec![];
         for inner_pair in pair.into_inner() {
             match inner_pair.as_rule() {
                 Rule::func_name => func_name = Some(inner_pair.as_str()),
-                Rule::arguments => args_vec.push(self.build_arguments(inner_pair)),
+                Rule::arguments => args_vec.push(self.build_arguments(inner_pair, curr_type)),
                 _ => unreachable!()
             }
         }
-        let def = self.get_currying_def(func_name.unwrap(), &args_vec);
+        let def = self.get_currying_def(func_name.unwrap(), &args_vec, curr_type);
         AstNode::CurryingFunc {
             name: String::from(func_name.unwrap()),
             args: args_vec,
@@ -85,18 +88,18 @@ impl FclParser {
         }
     }
 
-    fn get_def<'b>(&self, name: &'b str, args: &'b Vec<AstNode>) -> &FuncDef {
+    fn get_def<'b>(&self, name: &'b str, args: &'b Vec<AstNode>, curr_type: Option<&str>) -> &FuncDef {
         let a_types = args.iter()
-            .map(|node| String::from(node.get_type()))
+            .map(|node| String::from(AstNode::get_r_type_raw(node, curr_type)))
             .collect::<Vec<String>>();
         let args = Args::new(vec![a_types]);
         self.mgt.get_by_type(name, args)
     }
 
-    fn get_currying_def<'b>(&self, name: &'b str, args: &'b Vec<Vec<AstNode>>) -> &FuncDef {
+    fn get_currying_def<'b>(&self, name: &'b str, args: &'b Vec<Vec<AstNode>>, curr_type: Option<&str>) -> &FuncDef {
         let a_types = args.iter()
             .map(|types| types.iter()
-                .map(|node| String::from(node.get_type()))
+                .map(|node| String::from(AstNode::get_r_type_raw(node, curr_type)))
                 .collect::<Vec<String>>()
             )
             .collect::<Vec<Vec<String>>>();
@@ -104,18 +107,19 @@ impl FclParser {
         self.mgt.get_by_type(name, args)
     }
 
-    fn build_arguments(&self, pair: Pair<Rule>) -> Vec<AstNode> {
+    fn build_arguments(&self, pair: Pair<Rule>, curr_type: Option<&str>) -> Vec<AstNode> {
         let mut args = vec![];
         for arg_pair in pair.into_inner() {
-            args.push(self.build_argument(arg_pair));
+            args.push(self.build_argument(arg_pair, curr_type));
         }
         args
     }
 
-    fn build_argument(&self, pair: Pair<Rule>) -> AstNode {
+    fn build_argument(&self, pair: Pair<Rule>, curr_type: Option<&str>) -> AstNode {
         let arg_pair = pair.into_inner().next().unwrap();
         match arg_pair.as_rule() {
-            Rule::function => self.build_function(arg_pair.into_inner().next().unwrap()),
+            Rule::curr => AstNode::Curr,
+            Rule::function => self.build_function(arg_pair.into_inner().next().unwrap(), curr_type),
             Rule::value => {
                 let any_val = self.build_value(arg_pair.into_inner().next().unwrap());
                 AstNode::Val(any_val)
@@ -138,15 +142,4 @@ impl FclParser {
             _ => unreachable!()
         }
     }
-}
-
-#[test]
-fn parse_test() {
-    let exprs = "f1(1,abc)(dd,11).dd().abc(1,2);";
-//    let exprs = "f1(1,2)(4,3,dd).ab().bd(cd(1,2));";
-    let parser = FclParser { mgt: &FuncMgt::new() };
-    let ast = parser.ast(exprs);
-    eprintln!("ast = {:?}", ast);
-
-//    assert_eq!(1, 3);
 }

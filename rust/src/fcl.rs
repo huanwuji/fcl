@@ -1,4 +1,3 @@
-use std::any::Any;
 use std::rc::Rc;
 
 use crate::ast::{AnyVal, AstNode};
@@ -33,6 +32,10 @@ impl Fcl {
         self.eval_ctx(&self.new_context(), ast, curr)
     }
 
+    pub fn eval_str(&self, str: &str) -> AnyVal {
+        let ast = self.parser.ast(str);
+        self.eval(&ast, &AnyVal::None)
+    }
     pub fn eval_ctx(&self, ctx: &Context, ast: &AstNode, curr: &AnyVal) -> AnyVal {
         self.eval.eval(ctx, ast, curr)
     }
