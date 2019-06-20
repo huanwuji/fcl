@@ -14,59 +14,58 @@ pub enum AnyVal {
     Any { val: Rc<Box<Dynamic>>, s_type: String },
 }
 
-pub struct ValType {}
+impl AnyVal {
+    pub fn get_type(&self) -> &str {
+        AnyVal::get_val_type(self)
+    }
 
-impl ValType {
+    pub fn get_val_type(val: &AnyVal) -> &str {
+        match val {
+            AnyVal::None => Types::NONE,
+            AnyVal::Str(_) => Types::STR,
+            AnyVal::Bool(_) => Types::BOOL,
+            AnyVal::Long(_) => Types::LONG,
+            AnyVal::Float(_) => Types::FLOAT,
+            AnyVal::Any { s_type, .. } => s_type,
+        }
+    }
+}
+
+pub struct Types {}
+
+impl Types {
     pub const NONE: &'static str = "none";
     pub const BOOL: &'static str = "bool";
     pub const LONG: &'static str = "long";
     pub const FLOAT: &'static str = "float";
     pub const STR: &'static str = "str";
     pub const ANY: &'static str = "any";
-    pub const VAR: &'static str = "var";
-    pub const CURR: &'static str = "curr";
-
-    pub fn get_type(val: &AnyVal) -> &str {
-        match val {
-            AnyVal::None => ValType::NONE,
-            AnyVal::Str(_) => ValType::STR,
-            AnyVal::Bool(_) => ValType::BOOL,
-            AnyVal::Long(_) => ValType::LONG,
-            AnyVal::Float(_) => ValType::FLOAT,
-            AnyVal::Any { s_type, .. } => s_type,
-        }
-    }
+    pub const OMITS: &'static str = "..";
 }
 
 #[derive(Debug, Clone)]
 pub enum AstNode<'a> {
-    Curr,
-    Val(AnyVal),
-    Var { name: String },
-    Func { name: String, args: Vec<AstNode<'a>>, func_def: &'a FuncDef },
-    CurryingFunc { name: String, args: Vec<Vec<AstNode<'a>>>, func_def: &'a FuncDef },
-    FlowFunc { exprs: Vec<AstNode<'a>> },
-    Exprs(Vec<AstNode<'a>>),
-    FuncEnd,
+    Curr { v_type: String },
+    Val { value: AnyVal, v_type: String },
+    Var { name: String, v_type: String },
+    Func { name: String, args: Vec<AstNode<'a>>, func_def: &'a FuncDef, v_type: String },
+    CurryingFunc { name: String, args: Vec<Vec<AstNode<'a>>>, func_def: &'a FuncDef, v_type: String },
+    FlowFunc { exprs: Vec<AstNode<'a>>, v_type: String },
+    Exprs { exprs: Vec<AstNode<'a>>, v_type: String },
+    FuncEnd { v_type: String },
     None,
 }
 
 impl<'a> AstNode<'a> {
-    pub fn get_r_type(&self) -> String {
-        AstNode::get_r_type_raw(self, None)
-    }
-
-    pub fn get_r_type_raw<'c>(node: &'c AstNode, curr_type: Option<&'c str>) -> String {
-        match node {
-            AstNode::Curr => {
-                String::from(curr_type
-                    .unwrap_or_else(|| panic!("Can't found curr type")))
-            }
-            AstNode::Val(val) => String::from(ValType::get_type(val)),
-            AstNode::Var { .. } => String::from(ValType::VAR),
-            AstNode::Func { func_def, .. } => func_def.desc.r_type.clone(),
-            AstNode::CurryingFunc { func_def, .. } => func_def.desc.r_type.clone(),
-            AstNode::FlowFunc { exprs } => exprs.last().unwrap().get_r_type(),
+    pub fn get_v_type(&self) -> String {
+        match self {
+            AstNode::Curr { v_type } => v_type.clone(),
+            AstNode::Val { v_type, .. } => v_type.clone(),
+            AstNode::Var { v_type, .. } => v_type.clone(),
+            AstNode::Func { v_type, .. } => v_type.clone(),
+            AstNode::CurryingFunc { v_type, .. } => v_type.clone(),
+            AstNode::FlowFunc { v_type, .. } => v_type.clone(),
+            AstNode::FuncEnd { v_type, .. } => v_type.clone(),
             _ => panic!("Unsupport astNode type")
         }
     }

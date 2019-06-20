@@ -1,24 +1,23 @@
-use std::any::Any;
-use std::fmt::Debug;
-use std::thread::sleep;
-use std::time::{Duration, SystemTime};
-
-use dynamic::Dynamic;
+use std::time::SystemTime;
 
 use fcl::ast::AnyVal;
 use fcl::fcl::Fcl;
-use fcl::types;
 
 fn main() {
     let fcl = Fcl::new();
-    let result = fcl.eval_str("add(1,2).add(_, add(1,2))");
+    let result = fcl.eval_str("+(1,2).+(_, +(1,2));+(1,2).+(_,4)");
     eprintln!("result = {:?}", result);
 }
 
 #[test]
 fn performance_test() {
+    test_add();
+    test_add();
+}
+
+fn test_add() {
     let fcl = Fcl::new();
-    let ast = fcl.ast("add(4,2)");
+    let ast = fcl.ast("+(1,2).+(_, +(1,2))");
     let ctx = fcl.new_context();
     let mut i = 100000;
     let now = SystemTime::now();

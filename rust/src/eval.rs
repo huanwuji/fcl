@@ -18,9 +18,9 @@ impl Eval {
 
     pub fn eval(&self, ctx: &Context, ast: &AstNode, curr: &AnyVal) -> AnyVal {
         match ast {
-            AstNode::Curr => curr.clone(),
-            AstNode::Val(ref any_val) => any_val.clone(),
-            AstNode::Var { name } => {
+            AstNode::Curr { .. } => curr.clone(),
+            AstNode::Val { ref value, .. } => value.clone(),
+            AstNode::Var { name, .. } => {
                 ctx.scope.get(name.as_str()).map(|v| v.clone())
                     .unwrap_or(AnyVal::None)
             }
@@ -28,9 +28,9 @@ impl Eval {
                 self.eval_func(ctx, args, func_def, curr),
             AstNode::CurryingFunc { args, func_def, .. } =>
                 self.eval_currying_func(ctx, args, func_def, curr),
-            AstNode::FlowFunc { exprs } => self.eval_flow_func(ctx, exprs, curr),
-            AstNode::Exprs(exprs) => self.eval_exprs(ctx, exprs, curr),
-            AstNode::FuncEnd => AnyVal::None,
+            AstNode::FlowFunc { exprs, .. } => self.eval_flow_func(ctx, exprs, curr),
+            AstNode::Exprs { exprs, .. } => self.eval_exprs(ctx, exprs, curr),
+            AstNode::FuncEnd { .. } => AnyVal::None,
             _ => panic!()
         }
     }
@@ -56,7 +56,7 @@ impl Eval {
 
     fn eval_exprs(&self, ctx: &Context,
                   exprs: &Vec<AstNode>, curr: &AnyVal) -> AnyVal {
-        let mut result = AnyVal::None;
+        let mut result = curr.clone();
         for node in exprs {
             result = self.eval(ctx, node, &result);
         }

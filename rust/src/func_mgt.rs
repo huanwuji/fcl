@@ -13,11 +13,11 @@ impl FuncMgt {
 
     pub fn registers(&mut self, func_entities: Vec<FuncDef>) {
         for entity in func_entities {
-            self.add(entity);
+            self.register(entity);
         }
     }
 
-    pub fn add(&mut self, def: FuncDef) {
+    pub fn register(&mut self, def: FuncDef) {
         self.funcs.insert(def.desc.fid, def);
     }
 

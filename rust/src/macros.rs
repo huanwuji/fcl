@@ -2,7 +2,7 @@ use crate::func::FuncDesc;
 
 #[macro_export]
 macro_rules! def {
-     ( $name:ident$(($($arg:ty),* ))* -> $out:ty ) => {{
+     ( $name:tt$(($($arg:ty),* ))* -> $out:ty ) => {{
         let a_types = vec![$(vec![$(String::from(stringify!($arg))),*]),*];
         let args = $crate::func::Args::new(a_types);
         let name = stringify!($name);

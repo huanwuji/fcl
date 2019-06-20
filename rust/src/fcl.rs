@@ -4,7 +4,7 @@ use crate::ast::{AnyVal, AstNode};
 use crate::eval::Eval;
 use crate::func::Context;
 use crate::func_mgt::FuncMgt;
-use crate::funcs::add::AddLL;
+use crate::funcs::calc::add::Add;
 use crate::parser::FclParser;
 
 pub struct Fcl {
@@ -15,13 +15,16 @@ pub struct Fcl {
 
 impl Fcl {
     pub fn new() -> Fcl {
-        let funcs = vec![AddLL::new_def()];
         let mut mgt = FuncMgt::new();
-        mgt.registers(funcs);
+        Fcl::funcs_init(&mut mgt);
         let mgt = Rc::new(mgt);
         let parser = FclParser { mgt: Rc::clone(&mgt) };
         let eval = Eval { mgt: Rc::clone(&mgt) };
         Fcl { mgt, parser, eval }
+    }
+
+    pub fn funcs_init(mgt: &mut FuncMgt) {
+        Add::register(mgt);
     }
 
     pub fn ast(&self, str: &str) -> AstNode {
